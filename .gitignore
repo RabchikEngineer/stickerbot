@@ -3,9 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-/src/stickers/*
+/src/stickers/
+/src/memes/
 .idea
 temp.png
+src/test3.py
 
 
 # C extensions

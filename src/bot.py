@@ -7,6 +7,8 @@ client = discord.Client()
 
 if not os.path.exists('stickers'):
     os.mkdir('stickers')
+if not os.path.exists('memes'):
+    os.mkdir('memes')
 
 
 
@@ -87,6 +89,17 @@ async def update_sticker(msg,args):
     await msg.channel.send(':white_check_mark:Стикер успешно обновлён:white_check_mark:')
 
 
+async def send_memes(msg):
+    await msg.delete()
+    filenames = os.listdir('memes')
+    for filename in filenames:
+        if (os.path.getsize('memes/'+filename)/1024/1024)<8:
+            await msg.channel.send(file=discord.File('memes/'+filename))
+            os.remove('memes/'+filename)
+
+
+
+
 
 refresh_stickerlist()
 
@@ -144,6 +157,8 @@ async def on_message(message):
             await delete_sticker(message,args)
         elif command=='update_sticker':
             await update_sticker(message,args)
+        elif command=='send_memes':
+            await send_memes(message)
             
 
 
