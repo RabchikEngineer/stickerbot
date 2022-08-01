@@ -82,7 +82,7 @@ async def update_sticker(msg,args):
     id = int(args[0])
     filenames = os.listdir('stickers')
     for filename in filenames:
-        if filename[0] == str(id):
+        if filename[:filename.find("#")+1] == str(id):
             os.rename(f'stickers/{filename}',f'stickers/{filename[:filename.find("#")+1]+names_to_str(args[1:])}.png')
 
     refresh_stickerlist()
