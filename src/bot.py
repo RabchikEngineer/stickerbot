@@ -132,15 +132,18 @@ async def on_message(message):
         # await message.channel.send(files[message.content[7:]])
 
 
-
+        if message.author.nick==None:
+            nick=message.author.name
+        else:
+            nick=message.author.nick
         if message.reference:
             await message.delete()
             msg1= await message.channel.fetch_message(message.reference.message_id)
 
-            await msg1.reply(message.author.nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
+            await msg1.reply(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
         else:
             await message.delete()
-            await message.channel.send(message.author.nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
+            await message.channel.send(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
 
     elif message.content.lower()[0]=='$':
         command=message.content.lower()[1:].split(' ')[0]
