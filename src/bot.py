@@ -12,14 +12,22 @@ if not os.path.exists('memes'):
 
 
 
-def names_to_str(name_list):
+def names_to_filename(name_list):
     st = ''
     for i in name_list:
         st += f'{i}$'
     return st
 
+def filename_to_str(filename):
+    name_list=filename[filename.find('#')+1:filename.find('.')].split('$')
+    st=''
+    for i in name_list:
+        st+=f'{i}\n'
+    return st
+
 
 def refresh_stickerlist():
+    global files
     filenames=os.listdir('stickers')
     for filename in filenames:
         for name in filename[filename.find('#')+1:filename.find('.')].split('$'):
@@ -27,17 +35,9 @@ def refresh_stickerlist():
     # print(files)
 
 async def stickerlist(channel):
-
-    def namelist_to_str(filename):
-        name_list=filename[filename.find('#')+1:filename.find('.')].split('$')
-        st=''
-        for i in name_list:
-            st+=f'{i}\n'
-        return st
-
     filenames = os.listdir('stickers')
     for filename in filenames:
-        await channel.send(f'ID = {filename[:filename.find("#")]}\nНазвания:\n{namelist_to_str(filename)[:-1]}',file=discord.File('stickers/'+filename))
+        await channel.send(f'ID = {filename[:filename.find("#")]}\nНазвания:\n{filename_to_str(filename)[:-1]}',file=discord.File('stickers/'+filename))
 
 
 async def create_sticker(msg,args):
@@ -58,7 +58,7 @@ async def create_sticker(msg,args):
     await msg.attachments[0].save('temp.png')
     img=Image.open('temp.png')
     x,y = img.size
-    img.resize((160,int(160*y/x)),Image.LANCZOS).save(f'stickers/{find_free_id()}#{names_to_str(args)[:-1]}.png')
+    img.resize((160,int(160*y/x)),Image.LANCZOS).save(f'stickers/{find_free_id()}#{names_to_filename(args)[:-1]}.png')
     await msg.channel.send(':white_check_mark:Стикер успешно добавлен:white_check_mark:')
     refresh_stickerlist()
 
@@ -67,7 +67,7 @@ async def delete_sticker(msg,args):
         id=int(args[0])
         filenames = os.listdir('stickers')
         for filename in filenames:
-            if filename[0] == str(id):
+            if filename[:filename.find("#")] == str(id):
                 os.remove(f'stickers/{filename}')
     except:
         name=args[0]
@@ -83,7 +83,7 @@ async def update_sticker(msg,args):
     filenames = os.listdir('stickers')
     for filename in filenames:
         if filename[:filename.find("#")] == str(id):
-            os.rename(f'stickers/{filename}',f'stickers/{filename[:filename.find("#")+1]+names_to_str(args[1:])}.png')
+            os.rename(f'stickers/{filename}',f'stickers/{filename[:filename.find("#")+1]+names_to_filename(args[1:])}.png')
 
     refresh_stickerlist()
     await msg.channel.send(':white_check_mark:Стикер успешно обновлён:white_check_mark:')
@@ -98,6 +98,21 @@ async def send_memes(msg):
             os.remove('memes/'+filename)
 
 
+async def sticker_info(msg,args):
+    filenm=''
+    try:
+        id=int(args[0])
+        filenames = os.listdir('stickers')
+        for filename in filenames:
+            if filename[:filename.find("#")] == str(id):
+                filenm=filename
+    except:
+        name=args[0]
+        filenm=files[name]
+    if filenm != '':
+        await msg.channel.send(f'ID = {filenm[:filenm.find("#")]}\nНазвания:\n{filename_to_str(filenm)[:-1]}',file=discord.File('stickers/' + filenm))
+    else:
+        await msg.channel.send(':x:ERROR:x:')
 
 
 
@@ -153,6 +168,8 @@ async def on_message(message):
             refresh_stickerlist()
         elif command=='stickerlist':
             await stickerlist(channel)
+        elif command=='stickerinfo':
+            await sticker_info(message,args)
         elif command=='add_sticker':
             refresh_stickerlist()
             await create_sticker(message,args)
