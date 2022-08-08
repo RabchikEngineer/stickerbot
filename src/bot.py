@@ -229,5 +229,5 @@ async def on_message(message):
 
 
 
-
-client.run('OTQwMjk1MzI0MDk2OTQ2MjM3.G-4cX_.Lsl4QeQtv0LQjS4ntueZKxGeDM3Ec5Cwna4SyY')
+# print(os.environ.get('DISCORD_TOKEN'))
+client.run(os.environ.get('DISCORD_TOKEN'))
