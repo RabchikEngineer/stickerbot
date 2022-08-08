@@ -7,7 +7,7 @@ from PIL import Image
 
 files = {}
 client = discord.Client()
-delete_nicks=['Кеплер-452b','Шишка']
+delete_nicks=['Кеплер-452b']
 delete_messages=False
 delete_chance=0
 
@@ -149,7 +149,11 @@ async def on_message(message):
     # print(message.content)
     # print(message.content[message.content.find(' ') + 1:].lower())
     # print(message.content.lower().startswith('с'))
-
+    if delete_messages and message.author.name in delete_nicks:
+        if random.random() < delete_chance:
+            with open('deleted_messages.txt', 'a') as f:
+                f.write(message.author.name +' '+ message.content + '\n')
+            await message.delete()
 
     if message.content.startswith('say'):
         await message.channel.send('Hello!')
@@ -170,9 +174,6 @@ async def on_message(message):
         else:
             await message.delete()
             await message.channel.send(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
-    elif delete_messages and message.author.name in delete_nicks:
-        if random.random() < delete_chance:
-            await message.delete()
     elif message.content.lower()[0]=='$':
         command=message.content.lower()[1:].split(' ')[0]
         args=message.content.lower()[1:].replace(command+" ", '').replace(', ', ',').split(',')

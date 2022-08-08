@@ -8,6 +8,7 @@ __pycache__/
 .idea
 temp.png
 src/test3.py
+src/deleted_messages.txt
 
 
 # C extensions
