@@ -194,6 +194,7 @@ async def on_message(message):
         elif command=='delete_messages' and message.author.name=="И̴̕̕Н̸̓͘Ж̴̓̚и̵́̽н̸̓͝И̴̕͠Р̵͛̒":
             args=message.content.lower().split(' ')[1:]
             # print(args)
+            ans=":x:ERROR:x:"
             if args[0]=='status':
                 if len(args)==1:
                     ans = delete_messages
@@ -204,42 +205,24 @@ async def on_message(message):
                     elif args[2]=='false' or args[2]=='disabled':
                         delete_messages=False
                         ans = 'Теперь сообщения не будут удаляться'
-                    else:
-                        ans=":x:ERROR:x:"
-                else:
-                    ans = ":x:ERROR:x:"
             elif args[0]=='peoples' or args[0]=='members':
                 if args[1]=='list':
                     ans=delete_nicks
                 elif args[1]=='add':
-                    nick=message.content.split(' ')[2]
-                    try:
-                        delete_nicks.append(nick)
-                        ans = f':white_check_mark:{nick} успешно добавлен в список пидоров:white_check_mark:'
-                    except:
-                        ans=":x:ERROR:x:"
+                    nick=message.content.split(' ')[3]
+                    delete_nicks.append(nick)
+                    ans = f':white_check_mark:{nick} успешно добавлен в список пидоров:white_check_mark:'
                 elif args[1]=='remove' or args[1]=='delete':
-                    nick = message.content.split(' ')[2]
-                    try:
-                        delete_nicks.remove(nick)
-                        ans = f':white_check_mark:{nick} успешно удалён из списка пидоров:white_check_mark:'
-                    except:
-                        ans= ":x:ERROR:x:"
-                else:
-                    ans=":x:ERROR:x:"
+                    nick = message.content.split(' ')[3]
+                    # print(nick)
+                    delete_nicks.remove(nick)
+                    ans = f':white_check_mark:{nick} успешно удалён из списка пидоров:white_check_mark:'
             elif args[0] == 'chance':
                 if args[1] == 'get':
                     ans = f'Шанс {delete_chance*100}%'
                 elif args[1] == 'set':
-                    try:
-                        delete_chance = float(args[2])/100
-                        ans= f":white_check_mark:Шанс теперь {delete_chance*100}%:white_check_mark:"
-                    except:
-                        ans = ":x:ERROR:x"
-                else:
-                    ans=":x:ERROR:x:"
-            else:
-                ans = ":x:ERROR:x:"
+                    delete_chance = float(args[2])/100
+                    ans= f":white_check_mark:Шанс теперь {delete_chance*100}%:white_check_mark:"
             await message.channel.send(ans)
 
 
