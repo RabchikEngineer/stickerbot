@@ -1,9 +1,15 @@
+import random
+
 import discord,os
 from PIL import Image
 
 
+
 files = {}
 client = discord.Client()
+delete_nicks=['Кеплер-452b','Шишка']
+delete_messages=False
+delete_chance=0
 
 if not os.path.exists('stickers'):
     os.mkdir('stickers')
@@ -125,7 +131,12 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    # print(message.content)
+    global delete_messages
+    global delete_nicks
+    global delete_chance
+
+    # print(message.author.name)
+    # print(message.author.nick)
     if (message.author == client.user) or (message.content=='') or (not message.content):
         return
     channel=message.channel
@@ -159,7 +170,9 @@ async def on_message(message):
         else:
             await message.delete()
             await message.channel.send(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
-
+    elif delete_messages and message.author.name in delete_nicks:
+        if random.random() < delete_chance:
+            await message.delete()
     elif message.content.lower()[0]=='$':
         command=message.content.lower()[1:].split(' ')[0]
         args=message.content.lower()[1:].replace(command+" ", '').replace(', ', ',').split(',')
@@ -170,16 +183,65 @@ async def on_message(message):
             await stickerlist(channel)
         elif command=='stickerinfo':
             await sticker_info(message,args)
-        elif command=='add_sticker':
-            refresh_stickerlist()
+        elif command=='add_sticker' or command=='create_sticker':
             await create_sticker(message,args)
-        elif command=='remove_sticker':
+        elif command=='remove_sticker' or command=='remove_sticker':
             await delete_sticker(message,args)
         elif command=='update_sticker':
             await update_sticker(message,args)
         elif command=='send_memes':
             await send_memes(message)
-            
+        elif command=='delete_messages' and message.author.name=="И̴̕̕Н̸̓͘Ж̴̓̚и̵́̽н̸̓͝И̴̕͠Р̵͛̒":
+            args=message.content.lower().split(' ')[1:]
+            # print(args)
+            if args[0]=='status':
+                if len(args)==1:
+                    ans = delete_messages
+                elif args[1]=='set':
+                    if args[2]=='true' or args[2]=='enabled':
+                        delete_messages=True
+                        ans = 'Теперь сообщения будут удаляться'
+                    elif args[2]=='false' or args[2]=='disabled':
+                        delete_messages=False
+                        ans = 'Теперь сообщения не будут удаляться'
+                    else:
+                        ans=":x:ERROR:x:"
+                else:
+                    ans = ":x:ERROR:x:"
+            elif args[0]=='peoples' or args[0]=='members':
+                if args[1]=='list':
+                    ans=delete_nicks
+                elif args[1]=='add':
+                    nick=message.content.split(' ')[2]
+                    try:
+                        delete_nicks.append(nick)
+                        ans = f':white_check_mark:{nick} успешно добавлен в список пидоров:white_check_mark:'
+                    except:
+                        ans=":x:ERROR:x:"
+                elif args[1]=='remove' or args[1]=='delete':
+                    nick = message.content.split(' ')[2]
+                    try:
+                        delete_nicks.remove(nick)
+                        ans = f':white_check_mark:{nick} успешно удалён из списка пидоров:white_check_mark:'
+                    except:
+                        ans= ":x:ERROR:x:"
+                else:
+                    ans=":x:ERROR:x:"
+            elif args[0] == 'chance':
+                if args[1] == 'get':
+                    ans = f'Шанс {delete_chance*100}%'
+                elif args[1] == 'set':
+                    try:
+                        delete_chance = float(args[2])/100
+                        ans= f":white_check_mark:Шанс теперь {delete_chance*100}%:white_check_mark:"
+                    except:
+                        ans = ":x:ERROR:x"
+                else:
+                    ans=":x:ERROR:x:"
+            else:
+                ans = ":x:ERROR:x:"
+            await message.channel.send(ans)
+
 
 
 
