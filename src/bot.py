@@ -170,7 +170,7 @@ async def deleted_list(message):
     else:
         with open('deleted_messages.txt', 'r') as f:
             await message.channel.send(messages_to_str(f.read().split('\n')))
-
+    await message.delete()
 
 
 refresh_stickerlist()
