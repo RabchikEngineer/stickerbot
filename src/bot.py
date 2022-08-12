@@ -1,6 +1,4 @@
-import random
-
-import discord,os
+import discord, os, random, datetime
 from PIL import Image
 
 
@@ -30,6 +28,13 @@ def filename_to_str(filename):
     for i in name_list:
         st+=f'{i}\n'
     return st
+
+def messages_to_str(msg_list):
+    str=''
+    for i in msg_list:
+        str+=(i+'\n')
+    return str
+
 
 
 def refresh_stickerlist():
@@ -120,6 +125,52 @@ async def sticker_info(msg,args):
     else:
         await msg.channel.send(':x:ERROR:x:')
 
+async def delete_messages(message):
+    global delete_messages
+    global delete_chance
+    args = message.content.lower().split(' ')[1:]
+    # print(args)
+    ans = ":x:ERROR:x:"
+    if args[0] == 'status':
+        if len(args) == 1:
+            ans = delete_messages
+        elif args[1] == 'set':
+            if args[2] == 'true' or args[2] == 'enabled':
+                delete_messages = True
+                ans = 'Теперь сообщения будут удаляться'
+            elif args[2] == 'false' or args[2] == 'disabled':
+                delete_messages = False
+                ans = 'Теперь сообщения не будут удаляться'
+    elif args[0] == 'peoples' or args[0] == 'members':
+        if args[1] == 'list':
+            ans = delete_nicks
+        elif args[1] == 'add':
+            nick = message.content.split(' ')[3]
+            delete_nicks.append(nick)
+            ans = f':white_check_mark:{nick} успешно добавлен в список пидоров:white_check_mark:'
+        elif args[1] == 'remove' or args[1] == 'delete':
+            nick = message.content.split(' ')[3]
+            # print(nick)
+            delete_nicks.remove(nick)
+            ans = f':white_check_mark:{nick} успешно удалён из списка пидоров:white_check_mark:'
+    elif args[0] == 'chance':
+        if args[1] == 'get':
+            ans = f'Шанс {delete_chance * 100}%'
+        elif args[1] == 'set':
+            delete_chance = float(args[2]) / 100
+            ans = f":white_check_mark:Шанс теперь {delete_chance * 100}%:white_check_mark:"
+    await message.channel.send(ans)
+
+async def deleted_list(message):
+    args = message.content.lower().split(' ')[1:]
+    # print(args)
+    if len(args) != 0:
+        with open('deleted_messages.txt', 'r') as f:
+            await message.channel.send(messages_to_str([x for x in f.read().split('\n') if x!=''][-int(args[0]):]))
+    else:
+        with open('deleted_messages.txt', 'r') as f:
+            await message.channel.send(messages_to_str(f.read().split('\n')))
+
 
 
 refresh_stickerlist()
@@ -131,9 +182,9 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    global delete_messages
+    # global delete_messages
     global delete_nicks
-    global delete_chance
+    # global delete_chance
 
     # print(message.author.name)
     # print(message.author.nick)
@@ -152,7 +203,7 @@ async def on_message(message):
     if delete_messages and message.author.name in delete_nicks:
         if random.random() < delete_chance:
             with open('deleted_messages.txt', 'a') as f:
-                f.write(message.author.name +' '+ message.content + '\n')
+                f.write(f'{datetime.datetime.now()} {client.get_channel(message.channel.id)} {message.author.name} {message.clean_content}\n')
             await message.delete()
 
     if message.content.startswith('say'):
@@ -193,38 +244,9 @@ async def on_message(message):
         elif command=='send_memes':
             await send_memes(message)
         elif command=='delete_messages' and message.author.name=="И̴̕̕Н̸̓͘Ж̴̓̚и̵́̽н̸̓͝И̴̕͠Р̵͛̒":
-            args=message.content.lower().split(' ')[1:]
-            # print(args)
-            ans=":x:ERROR:x:"
-            if args[0]=='status':
-                if len(args)==1:
-                    ans = delete_messages
-                elif args[1]=='set':
-                    if args[2]=='true' or args[2]=='enabled':
-                        delete_messages=True
-                        ans = 'Теперь сообщения будут удаляться'
-                    elif args[2]=='false' or args[2]=='disabled':
-                        delete_messages=False
-                        ans = 'Теперь сообщения не будут удаляться'
-            elif args[0]=='peoples' or args[0]=='members':
-                if args[1]=='list':
-                    ans=delete_nicks
-                elif args[1]=='add':
-                    nick=message.content.split(' ')[3]
-                    delete_nicks.append(nick)
-                    ans = f':white_check_mark:{nick} успешно добавлен в список пидоров:white_check_mark:'
-                elif args[1]=='remove' or args[1]=='delete':
-                    nick = message.content.split(' ')[3]
-                    # print(nick)
-                    delete_nicks.remove(nick)
-                    ans = f':white_check_mark:{nick} успешно удалён из списка пидоров:white_check_mark:'
-            elif args[0] == 'chance':
-                if args[1] == 'get':
-                    ans = f'Шанс {delete_chance*100}%'
-                elif args[1] == 'set':
-                    delete_chance = float(args[2])/100
-                    ans= f":white_check_mark:Шанс теперь {delete_chance*100}%:white_check_mark:"
-            await message.channel.send(ans)
+            await delete_messages(message)
+        elif command == "deleted_list":
+            await deleted_list(message)
 
 
 
