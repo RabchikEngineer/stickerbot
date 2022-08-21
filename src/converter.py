@@ -19,6 +19,6 @@ for i in os.listdir(dir):
         print('----------------------------------------------------------------')
         os.system(f'ffmpeg -i {dir+i} -b:v {b}k {dir+"1_"+i}')
         if (os.path.getsize(dir+"1_"+i)/1024/1024)<8:
-            os.remove(dir)
+            os.remove(dir+i)
         else:
             os.remove(dir+"1_"+i)
