@@ -1,5 +1,6 @@
 import discord, os, random, datetime
 from PIL import Image
+from moviepy.editor import VideoFileClip
 
 
 
@@ -8,11 +9,12 @@ client = discord.Client()
 delete_nicks=['Кеплер-452b']
 delete_messages=False
 delete_chance=0
+memes_dir = 'memes/'
 
 if not os.path.exists('stickers'):
     os.mkdir('stickers')
-if not os.path.exists('memes'):
-    os.mkdir('memes')
+if not os.path.exists(memes_dir):
+    os.mkdir(memes_dir)
 
 
 
@@ -102,11 +104,32 @@ async def update_sticker(msg,args):
 
 async def send_memes(msg):
     await msg.delete()
-    filenames = os.listdir('memes')
+    filenames = os.listdir(memes_dir)
     for filename in filenames:
-        if (os.path.getsize('memes/'+filename)/1024/1024)<8:
-            await msg.channel.send(file=discord.File('memes/'+filename))
-            os.remove('memes/'+filename)
+        if (os.path.getsize(memes_dir+filename)/1024/1024)<8:
+            await msg.channel.send(file=discord.File(memes_dir+filename))
+            os.remove(memes_dir+filename)
+        else:
+            temp_filename=filename.split('.')[1]+'_temp.mp4'
+            clip = VideoFileClip(memes_dir + filename)
+            # print(clip.duration)
+            b = 300
+            if clip.duration < 30:
+                b = 600
+            elif clip.duration > 30 and clip.duration < 100:
+                b = 400
+            elif clip.duration > 100 and clip.duration < 200:
+                b = 300
+            elif clip.duration > 300:
+                b = 200
+            # print(b)
+            os.system(f'cmd /c "ffmpeg -i {memes_dir + filename} -b:v {b}k {memes_dir+temp_filename}"')
+            if (os.path.getsize(memes_dir+temp_filename)/1024/1024)<8:
+                await msg.channel.send(file=discord.File(memes_dir + temp_filename))
+                os.remove(memes_dir+filename)
+                os.remove(memes_dir+temp_filename)
+            else:
+                os.remove(memes_dir+temp_filename)
 
 
 async def sticker_info(msg,args):
