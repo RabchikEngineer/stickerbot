@@ -17,6 +17,11 @@ if not os.path.exists(memes_dir):
     os.mkdir(memes_dir)
 
 
+# async def del_msg(msg):
+#     try:
+#         await msg.delete()
+#     except:
+#         except
 
 def names_to_filename(name_list):
     st = ''
@@ -175,6 +180,13 @@ async def deleted_list(message):
     await message.delete()
 
 
+async def get_message(message):
+    prev_msg=await message.channel.fetch_message(message.reference.message_id)
+    prev_msg2=await message.channel.fetch_message(prev_msg.reference.message_id)
+    await message.channel.send(prev_msg2.jump_url)
+    # await message.delete()
+
+
 refresh_stickerlist()
 
 
@@ -249,6 +261,8 @@ async def on_message(message):
             await delete_messages(message)
         elif command == "deleted_list":
             await deleted_list(message)
+        elif command == 'get':
+            await get_message(message)
 
 
 
