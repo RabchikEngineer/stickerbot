@@ -112,6 +112,11 @@ async def send_memes(msg):
     filenames = os.listdir(memes_dir)
     for filename in filenames:
         if (os.path.getsize(memes_dir+filename)/1024/1024)<8:
+            if filename[:3]=='sss':
+                filename2 = '1' + filename
+                os.rename(memes_dir + filename, memes_dir + filename2)
+                filename=filename2
+
             await msg.channel.send(file=discord.File(memes_dir+filename))
             os.remove(memes_dir+filename)
 
