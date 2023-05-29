@@ -5,7 +5,9 @@ from moviepy.editor import VideoFileClip
 
 
 files = {}
-client = discord.Client()
+client_intents = discord.Intents.default()
+client_intents.message_content = True
+client = discord.Client(intents=client_intents)
 delete_nicks=['Кеплер-452b']
 delete_messages=False
 delete_chance=0
