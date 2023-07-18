@@ -194,6 +194,15 @@ async def get_message(message):
     # await message.delete()
 
 
+async def create_survey(message):
+    # print(1)
+    prev_msg = await message.channel.fetch_message(message.reference.message_id)
+    await prev_msg.clear_reactions()
+    await prev_msg.add_reaction('✅')
+    await prev_msg.add_reaction('❌')
+    await message.delete()
+
+
 refresh_stickerlist()
 
 
@@ -264,12 +273,14 @@ async def on_message(message):
             await update_sticker(message,args)
         elif command=='send_memes':
             await send_memes(message)
-        elif command=='delete_messages' and message.author.name=="И̴̕̕Н̸̓͘Ж̴̓̚и̵́̽н̸̓͝И̴̕͠Р̵͛̒":
+        elif command=='delete_messages' and message.author.name=="rabchik_engineer":
             await delete_messages(message)
         elif command == "deleted_list":
             await deleted_list(message)
         elif command == 'get':
             await get_message(message)
+        elif command == 'create_survey':
+            await create_survey(message)
 
 
 
