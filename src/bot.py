@@ -8,9 +8,9 @@ files = {}
 client_intents = discord.Intents.default()
 client_intents.message_content = True
 client = discord.Client(intents=client_intents)
-delete_nicks=['Кеплер-452b']
-delete_messages=False
-delete_chance=0
+# delete_nicks=['Кеплер-452b']
+# delete_messages=False
+# delete_chance=0
 memes_dir = 'memes/'
 
 if not os.path.exists('stickers'):
@@ -194,13 +194,18 @@ async def get_message(message):
     # await message.delete()
 
 
-async def create_survey(message):
+async def create_survey(message, self_activation=True):
     # print(1)
-    prev_msg = await message.channel.fetch_message(message.reference.message_id)
-    await prev_msg.clear_reactions()
-    await prev_msg.add_reaction('✅')
-    await prev_msg.add_reaction('❌')
-    await message.delete()
+    if self_activation:
+        await message.clear_reactions()
+        await message.add_reaction('✅')
+        await message.add_reaction('❌')
+    else:
+        prev_message = await message.channel.fetch_message(message.reference.message_id)
+        await prev_message.clear_reactions()
+        await prev_message.add_reaction('✅')
+        await prev_message.add_reaction('❌')
+        await message.delete()
 
 
 refresh_stickerlist()
@@ -213,7 +218,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
     # global delete_messages
-    global delete_nicks
+    # global delete_nicks
     # global delete_chance
 
     # print(message.author.name)
@@ -230,16 +235,21 @@ async def on_message(message):
     # print(message.content)
     # print(message.content[message.content.find(' ') + 1:].lower())
     # print(message.content.lower().startswith('с'))
-    if delete_messages and message.author.name in delete_nicks:
-        if random.random() < delete_chance:
-            with open('deleted_messages.txt', 'a') as f:
-                f.write(f'{datetime.datetime.now()} {client.get_channel(message.channel.id)} {message.author.name} {message.clean_content}\n')
-            await message.delete()
 
-    if message.content.startswith('say'):
-        await message.channel.send('Hello!')
+    if message.channel.id==1142192978593579058:
+        await create_survey(message, self_activation=True)
 
-    elif (message.content.lower().startswith('стикер') or message.content.lower().startswith('с')) and message.content[message.content.find(' ')+1:].lower() in files:
+
+    # elif delete_messages and message.author.name in delete_nicks:
+    #     if random.random() < delete_chance:
+    #         with open('deleted_messages.txt', 'a') as f:
+    #             f.write(f'{datetime.datetime.now()} {client.get_channel(message.channel.id)} {message.author.name} {message.clean_content}\n')
+    #         await message.delete()
+
+    # if message.content.startswith('say'):
+    #     await message.channel.send('Hello!')
+
+    elif (message.content.lower().startswith('стикер') or message.content.lower().startswith('с ')) and message.content[message.content.find(' ')+1:].lower() in files:
         # await message.channel.send(files[message.content[7:]])
 
 
@@ -255,6 +265,7 @@ async def on_message(message):
         else:
             await message.delete()
             await message.channel.send(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
+
     elif message.content.lower()[0]=='$':
         command=message.content.lower()[1:].split(' ')[0]
         args=message.content.lower()[1:].replace(command+" ", '').replace(', ', ',').split(',')
@@ -279,8 +290,8 @@ async def on_message(message):
             await deleted_list(message)
         elif command == 'get':
             await get_message(message)
-        elif command == 'create_survey':
-            await create_survey(message)
+        elif command in ['create_survey','опрос','опросик']:
+            await create_survey(message, self_activation=False)
 
 
 
