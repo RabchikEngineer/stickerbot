@@ -1,35 +1,41 @@
-import discord, os, random, datetime
+import discord, os, random, datetime, json, csv
 from PIL import Image
-from moviepy.editor import VideoFileClip
-
+from moviepy.editor import VideoFileClip as Video
+import moviepy.editor as me
 
 
 files = {}
 client_intents = discord.Intents.default()
 client_intents.message_content = True
 client = discord.Client(intents=client_intents)
-# delete_nicks=['Кеплер-452b']
-# delete_messages=False
-# delete_chance=0
-memes_dir = 'memes/'
-
-if not os.path.exists('stickers'):
-    os.mkdir('stickers')
-if not os.path.exists(memes_dir):
-    os.mkdir(memes_dir)
 
 
-# async def del_msg(msg):
-#     try:
-#         await msg.delete()
-#     except:
-#         except
+with open('config.json', encoding='utf-8') as f:
+    config=json.load(f)
+commands=config["commands"]
+directories=config["directories"]
+prefix=config["prefix"]
 
-def names_to_filename(name_list):
-    st = ''
-    for i in name_list:
-        st += f'{i}$'
-    return st
+developing_alert="Пока что в разработке\nИди нахуй :D"
+
+for directory in config['directories'].values():
+    print(directory)
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
+
+def nice_output(func):
+    def wrapper(*args,**kwargs):
+        print('\n'+'-'*30)
+        res=func(*args,**kwargs)
+        print('-' * 30 + '\n')
+        return res
+    return wrapper
+
+
+def sticker_names_to_filename(name_list):
+    return "$".join(name_list)
+
 
 def filename_to_str(filename):
     name_list=filename[filename.find('#')+1:filename.find('.')].split('$')
@@ -38,153 +44,107 @@ def filename_to_str(filename):
         st+=f'{i}\n'
     return st
 
+
 def messages_to_str(msg_list):
-    str=''
-    for i in msg_list:
-        str+=(i+'\n')
-    return str
+    return "\n".join(msg_list)
 
-
-
+@nice_output
 def refresh_stickerlist():
     global files
     filenames=os.listdir('stickers')
     for filename in filenames:
+        files.update({filename.split('#')[0]:filename})
         for name in filename[filename.find('#')+1:filename.find('.')].split('$'):
             files.update({name:filename})
     # print(files)
+    for k,v in sorted(files.items(),key=lambda x: int(x[1].split('#')[0])):
+        print(f'{k:25} --- {v}')
 
-async def stickerlist(channel):
-    filenames = os.listdir('stickers')
-    for filename in filenames:
-        await channel.send(f'ID = {filename[:filename.find("#")]}\nНазвания:\n{filename_to_str(filename)[:-1]}',file=discord.File('stickers/'+filename))
+
+async def stickerlist(msg):
+    await msg.channel.send(developing_alert)
+
+    # filenames = os.listdir('stickers')
+    # for filename in filenames:
+    #     await msg.channel.send(f'ID = {filename[:filename.find("#")]}\nНазвания:\n{filename_to_str(filename)[:-1]}',
+    #                            file=discord.File('stickers/'+filename))
 
 
 async def create_sticker(msg,args):
     if msg.attachments == []:
         await msg.channel.send(':x:Вы не прикрепили изображение:x:')
+        return
+
+    # print(msg.attachments)
+    print(msg.attachments[0])
+    # print(dir(msg.attachments[0]))
+    print(msg.attachments[0].content_type)
 
     def find_free_id():
-        filenames = os.listdir('stickers')
-        id_list=[]
+        filenames = os.listdir(directories["stickers_dir"])
+        id_set=set()
         for filename in filenames:
-            id_list.append(int(filename[:filename.find("#")]))
-        max_id=max(*id_list)
-        for id in range(max_id):
-            if not id in id_list:
-                return id
-        return max_id+1
+            id_set.update({int(filename.split('#')[0])})
 
-    await msg.attachments[0].save('temp.png')
-    img=Image.open('temp.png')
-    x,y = img.size
-    img.resize((160,int(160*y/x)),Image.LANCZOS).save(f'stickers/{find_free_id()}#{names_to_filename(args)[:-1]}.png')
-    await msg.channel.send(':white_check_mark:Стикер успешно добавлен:white_check_mark:')
+        return min(set(range(len(id_set)+2)).difference(id_set))
+
+    content_type=msg.attachments[0].content_type.split('/')
+    filename=directories['temp_directory']+'temp.'+content_type[1]
+    await msg.attachments[0].save(filename)
+    if content_type[0]=="image":
+        img=Image.open(filename)
+        x,y = img.size
+        img.resize((160,int(160*y/x)),Image.LANCZOS)\
+            .save(f'{directories["stickers_dir"]}{find_free_id()}#{sticker_names_to_filename(args)}.png')
+        await msg.channel.send(':white_check_mark:Стикер успешно добавлен:white_check_mark:')
+    elif content_type[0]=="video":
+        await msg.channel.send(developing_alert)
+        # video=Video(filename)
+        # video.resize(width=160)
+        # video.write_videofile(f'{directories["stickers_dir"]}{find_free_id()}#{sticker_names_to_filename(args)}.gif')
+    else:
+        await msg.channel.send(':x:Неизвестный формат файла:x:')
     refresh_stickerlist()
 
-async def delete_sticker(msg,args):
-    try:
-        id=int(args[0])
-        filenames = os.listdir('stickers')
-        for filename in filenames:
-            if filename[:filename.find("#")] == str(id):
-                os.remove(f'stickers/{filename}')
-    except:
-        name=args[0]
-        os.remove(f'stickers/{files.get(name)}')
 
+async def delete_sticker(msg,args):
+    filename=files.get(args[0])
+    os.remove(directories["stickers_dir"]+filename)
     refresh_stickerlist()
     await msg.channel.send(':white_check_mark:Стикер успешно удалён:white_check_mark:')
 
 
 async def update_sticker(msg,args):
-    print(args)
-    id = int(args[0])
-    filenames = os.listdir('stickers')
-    for filename in filenames:
-        if filename[:filename.find("#")] == str(id):
-            os.rename(f'stickers/{filename}',f'stickers/{filename[:filename.find("#")+1]+names_to_filename(args[1:])}.png')
+    filename=files.get(args[0])
+    os.rename(directories["stickers_dir"]+filename,
+              f'{directories["stickers_dir"]}{filename.split("#")[0]}#{sticker_names_to_filename(args[1:])}.png')
 
     refresh_stickerlist()
     await msg.channel.send(':white_check_mark:Стикер успешно обновлён:white_check_mark:')
 
 
 async def send_memes(msg):
-    await msg.delete()
-    filenames = os.listdir(memes_dir)
-    for filename in filenames:
-        if (os.path.getsize(memes_dir+filename)/1024/1024)<8:
-            if filename[:3]=='sss':
-                filename2 = '1' + filename
-                os.rename(memes_dir + filename, memes_dir + filename2)
-                filename=filename2
+    await msg.channel.send(developing_alert)
 
-            await msg.channel.send(file=discord.File(memes_dir+filename))
-            os.remove(memes_dir+filename)
+    # await msg.delete()
+    # filenames = os.listdir(directories['memes_dir'])
+    # for filename in filenames:
+    #     if (os.path.getsize(directories['memes_dir']+filename)/1024/1024)<8:
+    #         if filename[:3]=='sss':
+    #             filename2 = '1' + filename
+    #             os.rename(directories['memes_dir'] + filename, directories['memes_dir'] + filename2)
+    #             filename=filename2
+    #
+    #         await msg.channel.send(file=discord.File(directories['memes_dir']+filename))
+    #         os.remove(directories['memes_dir']+filename)
 
 
 async def sticker_info(msg,args):
-    filenm=''
-    try:
-        id=int(args[0])
-        filenames = os.listdir('stickers')
-        for filename in filenames:
-            if filename[:filename.find("#")] == str(id):
-                filenm=filename
-    except:
-        name=args[0]
-        filenm=files[name]
-    if filenm != '':
-        await msg.channel.send(f'ID = {filenm[:filenm.find("#")]}\nНазвания:\n{filename_to_str(filenm)[:-1]}',file=discord.File('stickers/' + filenm))
+    filename=files.get(args[0])
+    if filename:
+        await msg.channel.send(f'ID = {filename.split("#")[0]}\nНазвания:\n{filename_to_str(filename)}',file=discord.File(directories["stickers_dir"] + filename))
     else:
         await msg.channel.send(':x:ERROR:x:')
-
-async def delete_messages(message):
-    global delete_messages
-    global delete_chance
-    args = message.content.lower().split(' ')[1:]
-    # print(args)
-    ans = ":x:ERROR:x:"
-    if args[0] == 'status':
-        if len(args) == 1:
-            ans = delete_messages
-        elif args[1] == 'set':
-            if args[2] == 'true' or args[2] == 'enabled':
-                delete_messages = True
-                ans = 'Теперь сообщения будут удаляться'
-            elif args[2] == 'false' or args[2] == 'disabled':
-                delete_messages = False
-                ans = 'Теперь сообщения не будут удаляться'
-    elif args[0] == 'peoples' or args[0] == 'members':
-        if args[1] == 'list':
-            ans = delete_nicks
-        elif args[1] == 'add':
-            nick = message.content.split(' ')[3]
-            delete_nicks.append(nick)
-            ans = f':white_check_mark:{nick} успешно добавлен в список пидоров:white_check_mark:'
-        elif args[1] == 'remove' or args[1] == 'delete':
-            nick = message.content.split(' ')[3]
-            # print(nick)
-            delete_nicks.remove(nick)
-            ans = f':white_check_mark:{nick} успешно удалён из списка пидоров:white_check_mark:'
-    elif args[0] == 'chance':
-        if args[1] == 'get':
-            ans = f'Шанс {delete_chance * 100}%'
-        elif args[1] == 'set':
-            delete_chance = float(args[2]) / 100
-            ans = f":white_check_mark:Шанс теперь {delete_chance * 100}%:white_check_mark:"
-    await message.channel.send(ans)
-
-async def deleted_list(message):
-    args = message.content.lower().split(' ')[1:]
-    # print(args)
-    if len(args) != 0:
-        with open('deleted_messages.txt', 'r') as f:
-            await message.channel.send(messages_to_str([x for x in f.read().split('\n') if x!=''][-int(args[0]):]))
-    else:
-        with open('deleted_messages.txt', 'r') as f:
-            await message.channel.send(messages_to_str(f.read().split('\n')))
-    await message.delete()
 
 
 async def get_message(message):
@@ -195,17 +155,16 @@ async def get_message(message):
 
 
 async def create_survey(message, self_activation=True):
-    # print(1)
     if self_activation:
         await message.clear_reactions()
-        await message.add_reaction('✅')
+        await message.add_reactions('✅')
         await message.add_reaction('❌')
     else:
+        await message.delete()
         prev_message = await message.channel.fetch_message(message.reference.message_id)
         await prev_message.clear_reactions()
         await prev_message.add_reaction('✅')
         await prev_message.add_reaction('❌')
-        await message.delete()
 
 
 refresh_stickerlist()
@@ -214,83 +173,59 @@ refresh_stickerlist()
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
+    # print(files)
 
 @client.event
 async def on_message(message):
-    # global delete_messages
-    # global delete_nicks
-    # global delete_chance
 
     # print(message.author.name)
     # print(message.author.nick)
-    if (message.author == client.user) or (message.content=='') or (not message.content):
+
+    message_text=message.content.lower()
+    channel = message.channel
+    message_body = message_text[message_text.find(' ') + 1:]
+
+    if (message.author == client.user) or (message_text=='') or (not message_text):
         return
-    channel=message.channel
 
-    # print(message.content)
-    # if message.reference:
-    #     msg1= await message.channel.fetch_message(message.reference.message_id)
-    #     # print(msg1)
-
-    # print(message.content)
-    # print(message.content[message.content.find(' ') + 1:].lower())
-    # print(message.content.lower().startswith('с'))
-
-    if message.channel.id==1142192978593579058:
+    if channel.id==1142192978593579058 and not message.author.bot:
         await create_survey(message, self_activation=True)
 
+    if (message_text.startswith('стикер') or message_text.startswith('с ')) and message_body in files:
+        # print(1)
 
-    # elif delete_messages and message.author.name in delete_nicks:
-    #     if random.random() < delete_chance:
-    #         with open('deleted_messages.txt', 'a') as f:
-    #             f.write(f'{datetime.datetime.now()} {client.get_channel(message.channel.id)} {message.author.name} {message.clean_content}\n')
-    #         await message.delete()
-
-    # if message.content.startswith('say'):
-    #     await message.channel.send('Hello!')
-
-    elif (message.content.lower().startswith('стикер') or message.content.lower().startswith('с ')) and message.content[message.content.find(' ')+1:].lower() in files:
-        # await message.channel.send(files[message.content[7:]])
-
-
-        if message.author.nick==None:
-            nick=message.author.name
-        else:
-            nick=message.author.nick
+        nick = message.author.nick or message.author.name
+        file=discord.File(f'stickers/'+files[message_body])
         if message.reference:
             await message.delete()
             msg1= await message.channel.fetch_message(message.reference.message_id)
-
-            await msg1.reply(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
+            await msg1.reply(nick,file=file)
         else:
             await message.delete()
-            await message.channel.send(nick,file=discord.File('stickers/'+files[message.content[message.content.find(' ')+1:].lower()]))
+            await message.channel.send(nick,file=file)
 
-    elif message.content.lower()[0]=='$':
-        command=message.content.lower()[1:].split(' ')[0]
-        args=message.content.lower()[1:].replace(command+" ", '').replace(', ', ',').split(',')
-        # print(args)
-        if command=='refresh_names':
+    elif message_text[0]==prefix:
+        args_full = list(csv.reader([message_text[1:]],delimiter=' '))[0]
+        print(args_full)
+        command=args_full[0]
+        args=args_full[1:]
+        if command in commands['refresh_names']:
             refresh_stickerlist()
-        elif command=='stickerlist':
-            await stickerlist(channel)
-        elif command=='stickerinfo':
+        elif command in commands['stickerlist']:
+            await stickerlist(message)
+        elif command in commands['sticker_info']:
             await sticker_info(message,args)
-        elif command=='add_sticker' or command=='create_sticker':
+        elif command in commands['add_sticker']:
             await create_sticker(message,args)
-        elif command=='remove_sticker' or command=='remove_sticker':
+        elif command in commands['delete_sticker']:
             await delete_sticker(message,args)
-        elif command=='update_sticker':
+        elif command in commands['update_sticker']:
             await update_sticker(message,args)
-        elif command=='send_memes':
+        elif command in commands['send_memes']:
             await send_memes(message)
-        elif command=='delete_messages' and message.author.name=="rabchik_engineer":
-            await delete_messages(message)
-        elif command == "deleted_list":
-            await deleted_list(message)
-        elif command == 'get':
+        elif command in commands['get']:
             await get_message(message)
-        elif command in ['create_survey','опрос','опросик']:
+        elif command in commands['create_survey']:
             await create_survey(message, self_activation=False)
 
 

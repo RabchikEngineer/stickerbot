@@ -1,0 +1,21 @@
+{
+  "commands":{
+    "refresh_names": ["refresh_names","refresh_stickers","refresh_stickerlist","обновить_список","обновить"],
+    "stickerlist": ["stickerlist","sticker_list","список"],
+    "sticker_info": ["sticker_info","stickerinfo","инфа","инфо","информация"],
+    "add_sticker": ["add_sticker","добавить"],
+    "delete_sticker": ["delete_sticker","remove_sticker","удалить"],
+    "update_sticker": ["update_sticker","изменить"],
+    "send_memes": ["send_memes"],
+    "delete_messages": ["delete_messages"],
+    "deleted_list": ["deleted_list"],
+    "get": ["get"],
+    "create_survey": ["create_survey","опрос","опросик"]
+  },
+  "directories": {
+    "memes_dir": "memes/",
+    "stickers_dir": "stickers/",
+    "temp_directory": "temp/"
+  },
+  "prefix": "$"
+}

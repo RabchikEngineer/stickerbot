@@ -5,9 +5,13 @@ __pycache__/
 
 /src/stickers/
 /src/memes/
+/src/temp/
 .idea
 temp.png
+src/test1.py
+src/test2.py
 src/test3.py
+src/test.json
 src/deleted_messages.txt
 
 
