@@ -17,5 +17,6 @@
     "stickers_dir": "stickers/",
     "temp_directory": "temp/"
   },
-  "prefix": "$"
+  "prefix": "$",
+  "debug": true
 }

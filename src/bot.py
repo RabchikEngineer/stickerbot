@@ -1,7 +1,7 @@
 import discord, os, random, datetime, json, csv
 from PIL import Image
 from moviepy.editor import VideoFileClip as Video
-import moviepy.editor as me
+from subprocess import Popen,PIPE
 
 
 files = {}
@@ -15,11 +15,12 @@ with open('config.json', encoding='utf-8') as f:
 commands=config["commands"]
 directories=config["directories"]
 prefix=config["prefix"]
+debug=config["debug"]
 
 developing_alert="Пока что в разработке\nИди нахуй :D"
 
 for directory in config['directories'].values():
-    print(directory)
+    # print(directory)
     if not os.path.exists(directory):
         os.mkdir(directory)
 
@@ -54,11 +55,12 @@ def refresh_stickerlist():
     filenames=os.listdir('stickers')
     for filename in filenames:
         files.update({filename.split('#')[0]:filename})
-        for name in filename[filename.find('#')+1:filename.find('.')].split('$'):
+        for name in filename[filename.find('#')+1:filename.rfind('.')].split('$'):
             files.update({name:filename})
     # print(files)
-    for k,v in sorted(files.items(),key=lambda x: int(x[1].split('#')[0])):
-        print(f'{k:25} --- {v}')
+    if debug:
+        for k,v in sorted(files.items(),key=lambda x: int(x[1].split('#')[0])):
+            print(f'{k:25} --- {v}')
 
 
 async def stickerlist(msg):
@@ -76,9 +78,9 @@ async def create_sticker(msg,args):
         return
 
     # print(msg.attachments)
-    print(msg.attachments[0])
+    # print(msg.attachments[0])
     # print(dir(msg.attachments[0]))
-    print(msg.attachments[0].content_type)
+    # print(msg.attachments[0].content_type)
 
     def find_free_id():
         filenames = os.listdir(directories["stickers_dir"])
@@ -206,7 +208,8 @@ async def on_message(message):
 
     elif message_text[0]==prefix:
         args_full = list(csv.reader([message_text[1:]],delimiter=' '))[0]
-        print(args_full)
+        if debug:
+            print(args_full)
         command=args_full[0]
         args=args_full[1:]
         if command in commands['refresh_names']:
