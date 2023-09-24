@@ -52,6 +52,7 @@ def messages_to_str(msg_list):
 @nice_output
 def refresh_stickerlist():
     global files
+    files={}
     filenames=os.listdir('stickers')
     for filename in filenames:
         files.update({filename.split('#')[0]:filename})
