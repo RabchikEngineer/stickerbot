@@ -159,7 +159,7 @@ async def get_message(message):
 async def create_survey(message, self_activation=True):
     if self_activation:
         await message.clear_reactions()
-        await message.add_reactions('✅')
+        await message.add_reaction('✅')
         await message.add_reaction('❌')
     else:
         await message.delete()
