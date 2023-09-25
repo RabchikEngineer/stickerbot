@@ -38,16 +38,15 @@ def sticker_names_to_filename(name_list):
     return "$".join(name_list)
 
 
+def sticker_filename_to_names(filename):
+    print(filename)
+    return filename[filename.find('#')+1:filename.rfind('.')].split('$')
+
+
 def filename_to_str(filename):
-    name_list=filename[filename.find('#')+1:filename.find('.')].split('$')
-    st=''
-    for i in name_list:
-        st+=f'{i}\n'
-    return st
+    name_list=sticker_filename_to_names(filename)
+    return "\n".join(name_list)
 
-
-def messages_to_str(msg_list):
-    return "\n".join(msg_list)
 
 @nice_output
 def refresh_stickerlist():
@@ -56,7 +55,7 @@ def refresh_stickerlist():
     filenames=os.listdir('stickers')
     for filename in filenames:
         files.update({filename.split('#')[0]:filename})
-        for name in filename[filename.find('#')+1:filename.rfind('.')].split('$'):
+        for name in sticker_filename_to_names(filename):
             files.update({name:filename})
     # print(files)
     if debug:
@@ -118,9 +117,20 @@ async def delete_sticker(msg,args):
 
 
 async def update_sticker(msg,args):
-    filename=files.get(args[0])
+    filename = files.get(args[0])
+    names = set(sticker_filename_to_names(filename))
+
+    if args[1]=="+":
+        names|=set(args[2:])
+
+    elif args[1]=="-":
+        names-=set(args[2:])
+
+    elif args[1] in ["x", "х"]:
+        names=set(args[2:])
+
     os.rename(directories["stickers_dir"]+filename,
-              f'{directories["stickers_dir"]}{filename.split("#")[0]}#{sticker_names_to_filename(args[1:])}.png')
+              f'{directories["stickers_dir"]}{filename.split("#")[0]}#{sticker_names_to_filename(names)}.png')
 
     refresh_stickerlist()
     await msg.channel.send(':white_check_mark:Стикер успешно обновлён:white_check_mark:')
