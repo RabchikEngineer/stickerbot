@@ -17,6 +17,9 @@
     "stickers_dir": "stickers/",
     "temp_directory": "temp/"
   },
+  "colors": {
+    "stickerlist_background": [49, 51, 56, 255]
+  },
   "prefix": "$",
   "debug": true
 }

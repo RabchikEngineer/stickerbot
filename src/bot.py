@@ -2,6 +2,7 @@ import discord, os, random, datetime, json, csv
 from PIL import Image
 from moviepy.editor import VideoFileClip as Video
 from subprocess import Popen,PIPE
+from image_generator import create_stickerlist
 
 
 files = {}
@@ -52,7 +53,7 @@ def filename_to_str(filename):
 def refresh_stickerlist():
     global files
     files={}
-    filenames=os.listdir('stickers')
+    filenames=os.listdir(directories["stickers_dir"])
     for filename in filenames:
         files.update({filename.split('#')[0]:filename})
         for name in sticker_filename_to_names(filename):
@@ -64,7 +65,11 @@ def refresh_stickerlist():
 
 
 async def stickerlist(msg):
-    await msg.channel.send(developing_alert)
+    # await msg.channel.send(developing_alert)
+
+    create_stickerlist(os.listdir(directories["stickers_dir"]))
+    await msg.channel.send(file=discord.File(directories["temp_directory"]+"stickerlist.png"))
+
 
     # filenames = os.listdir('stickers')
     # for filename in filenames:
