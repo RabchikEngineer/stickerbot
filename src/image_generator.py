@@ -45,6 +45,6 @@ def create_stickerlist(filenames):
     image.save(directories['temp_directory']+"stickerlist.png", "PNG")
 
 
-filenames=os.listdir("stickers")[:-10]
-create_stickerlist(filenames)
-print(*filenames, sep='\n')
+#filenames=os.listdir("stickers")[:-10]
+#create_stickerlist(filenames)
+#print(*filenames, sep='\n')

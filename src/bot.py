@@ -67,7 +67,7 @@ def refresh_stickerlist():
 async def stickerlist(msg):
     # await msg.channel.send(developing_alert)
 
-    create_stickerlist(os.listdir(directories["stickers_dir"]))
+    create_stickerlist(sorted(os.listdir(directories["stickers_dir"]), key=lambda x: int(x.split("#")[0])))
     await msg.channel.send(file=discord.File(directories["temp_directory"]+"stickerlist.png"))
 
 
