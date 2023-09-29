@@ -206,7 +206,7 @@ async def on_message(message):
     if (message.author == client.user) or (message_text=='') or (not message_text):
         return
 
-    if channel.id==1142192978593579058 and not message.author.bot:
+    if channel.id==config["survey_channel_id"] and not message.author.bot:
         await create_survey(message, self_activation=True)
 
     if (message_text.startswith('стикер') or message_text.startswith('с ')) and message_body in files:

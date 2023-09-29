@@ -20,6 +20,7 @@
   "colors": {
     "stickerlist_background": [49, 51, 56, 255]
   },
+  "survey_channel_id":######,
   "prefix": "$",
   "debug": true
 }
