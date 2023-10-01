@@ -107,6 +107,9 @@ async def create_sticker(msg,args):
     res=await save_file(msg.attachments[0], filename)
     if not res:
         await msg.channel.send(':x:Неизвестный формат файла:x:')
+        return
+
+    await msg.channel.send(':white_check_mark:Стикер успешно добавлен:white_check_mark:')
 
     refresh_stickerlist()
 
@@ -139,9 +142,8 @@ async def update_sticker(msg,args):
     if msg.attachments:
         res = await save_file(msg.attachments[0], new_filename)
         os.remove(directories["stickers_dir"]+old_filename)
-        res_dict = {0: ':x:Неизвестный формат файла:x:', 2: developing_alert}
-        if res in res_dict.keys():
-            await msg.channel.send(res_dict[res])
+        if not res:
+            await msg.channel.send(':x:Неизвестный формат файла:x:')
             return
     else:
         os.rename(directories["stickers_dir"]+old_filename, directories["stickers_dir"]+new_filename)
