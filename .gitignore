@@ -13,6 +13,9 @@ src/test2.py
 src/test3.py
 src/test.json
 src/deleted_messages.txt
+src/config.json
+src/test.py
+src/arial.ttf
 
 
 # C extensions
