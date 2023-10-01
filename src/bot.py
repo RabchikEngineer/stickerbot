@@ -136,12 +136,14 @@ async def update_sticker(msg,args):
             names=set(args[2:])
 
     new_filename=f'{old_filename.split("#")[0]}#{sticker_names_to_filename(names)}.png'
-    print(old_filename)
-    print(new_filename)
+    if debug:
+        print(old_filename)
+        print(new_filename)
 
     if msg.attachments:
         res = await save_file(msg.attachments[0], new_filename)
-        os.remove(directories["stickers_dir"]+old_filename)
+        if old_filename!=new_filename:
+            os.remove(directories["stickers_dir"]+old_filename)
         if not res:
             await msg.channel.send(':x:Неизвестный формат файла:x:')
             return
